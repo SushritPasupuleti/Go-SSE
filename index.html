@@ -1,0 +1,89 @@
+<html lang="en">
+
+<head>
+	<title>Stock Values</title>
+</head>
+
+<body style="background: #313244; font-family: system-ui">
+	<div style="
+        text-align: center;
+        margin-top: 10vh;
+        max-width: 1000px;
+        margin-left: 10vw;
+        margin-right: 10vw;
+      ">
+		<h1 style="color: #cba6f7">Stock Value</h1>
+
+		<hr style="border: 1px solid #585b70" />
+
+		<p id="value" style="color: #cdd6f4; font-size: 1.15rem; text-align: left">
+			Loading data...
+		</p>
+		<!-- HTML Variables are canon now -->
+
+		<hr style="border: 1px solid #585b70" />
+		<p id="previous" style="visibility: hidden">0</p>
+	</div>
+
+	<script>
+		const value = document.getElementById("value");
+		const previous = document.getElementById("previous");
+
+		const es = new EventSource("/stocks/stream/apple");
+		es.onerror = (err) => {
+			console.log("onerror", err);
+		};
+
+		// es.onmessage = (msg) => {
+		// 	console.log("onmessage", msg);
+		// };
+		//
+		// es.onopen = (...args) => {
+		// 	console.log("onopen", args);
+		// };
+
+		es.addEventListener("single-stock-stream", (event) => {
+			const parsedData = JSON.parse(event.data);
+
+			difference = parsedData.value - previous.innerHTML;
+
+			differenceMesage =
+				difference > 0
+					? '<b style="color: #a6e3a1	">🛆</b>'
+					: '<b style="color: #f38ba8	">⛛</b>';
+
+			differenceAmount =
+				difference > 0
+					? '<b style="color: #a6e3a1	">' + difference + "</b>"
+					: '<b style="color: #f38ba8	">' + difference + "</b>";
+
+			const date = Date.now();
+
+			const diffDate = date - Date.parse(parsedData.timestamp);
+			const secondsAgo = Math.floor(diffDate / 1000);
+
+			// diffDate = date - Date.parse(parsedData.timestamp);
+
+			value.innerHTML =
+				'<b style="font-size: 1.5rem;">$' +
+				parsedData.ticker +
+				": " +
+				// differenceMesage +
+				" " +
+				parsedData.value +
+				' <b style="font-weight: normal; color: #a6adc8; font-size: 1rem; ">USD</b> </b>' +
+				"<br/>" +
+				differenceMesage + " " +
+				differenceAmount +
+				" (Last updated: " +
+				// parsedData.timestamp +
+				secondsAgo +
+				" seconds ago" +
+				")";
+
+			previous.innerHTML = parsedData.value;
+		});
+	</script>
+</body>
+
+</html>

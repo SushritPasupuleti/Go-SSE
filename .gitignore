@@ -21,3 +21,4 @@
 go.work
 .env
 .do_tasks
+tmp

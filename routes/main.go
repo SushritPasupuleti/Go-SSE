@@ -3,6 +3,7 @@ package routes
 import (
 	// "encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -11,11 +12,11 @@ import (
 	// "context"
 	// "server/env"
 	// "server/handlers"
-	"server/models"
-
+	"server/handlers"
+	"server/helpers"
+	// "server/models"
 	// "strconv"
-
-	"github.com/rs/zerolog/log"
+	// "github.com/rs/zerolog/log"
 )
 
 func Routes() http.Handler {
@@ -31,14 +32,26 @@ func Routes() http.Handler {
 		MaxAge:           300,
 	}))
 
-	users := []models.User{
-		{ID: 1, Name: "Batman"},
-		{ID: 2, Name: "Iron Man"},
-		{ID: 3, Name: "Spiderman"},
-		{ID: 4, Name: "Deadpool"},
-	}
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 
-	log.Info().Msgf("Users: %v", users)
+		indexHtml, err := os.ReadFile("./index.html")
+
+		if err != nil {
+			w.Write([]byte("Error reading index.html"))
+			helpers.ErrorJSON(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(indexHtml)
+	})
+
+	router.Group(func(r chi.Router) {
+		router.Route("/stocks", func(r chi.Router) {
+			r.Get("/{name}", handlers.GetStocks)
+			r.Get("/stream/{name}", handlers.GetStocksStream)
+		})
+	})
 
 	return router
 }
